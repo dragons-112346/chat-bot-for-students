@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Math Tutor Game</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #8ec5fc, #e0c3fc);
+}
+
+nav {
+  display: flex;
+  justify-content: space-around;
+  background: #4a69bd;
+  padding: 10px;
+  color: white;
+}
+
+nav button {
+  background: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.page {
+  display: none;
+  padding: 15px;
+}
+
+.page.active {
+  display: block;
+}
+
+#chat {
+  height: 300px;
+  overflow-y: auto;
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.bot {
+  background: #eef3ff;
+  padding: 8px;
+  margin: 5px 0;
+  border-radius: 8px;
+}
+
+.user {
+  background: #d1f7c4;
+  padding: 8px;
+  margin: 5px 0;
+  border-radius: 8px;
+  text-align: right;
+}
+
+#inputArea {
+  display: flex;
+  margin-top: 8px;
+}
+
+input {
+  flex: 1;
+  padding: 8px;
+}
+
+button.send {
+  padding: 8px;
+}
+
+.avatar {
+  font-size: 50px;
+}
+
+.shop-item {
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+  margin: 5px 0;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <button onclick="showPage('home')">Home</button>
+  <button onclick="showPage('chatPage')">Chat</button>
+  <button onclick="showPage('shop')">Shop</button>
+  <button onclick="showPage('limits')">Limits</button>
+</nav>
+
+<!-- HOME -->
+<div id="home" class="page active">
+  <h2>🏠 Welcome</h2>
+  <p>Choose your tutor:</p>
+  <button onclick="setAvatar('👦')">Boy Tutor</button>
+  <button onclick="setAvatar('👧')">Girl Tutor</button>
+  <p id="coins">🟡 Coins: 0</p>
+</div>
+
+<!-- CHAT -->
+<div id="chatPage" class="page">
+  <div class="avatar" id="avatar">👦</div>
+  <div id="chat"></div>
+
+  <div id="inputArea">
+    <input id="input" placeholder="Type a math problem (ex: 3x + 2 = 8)">
+    <button class="send" onclick="send()">Send</button>
+  </div>
+</div>
+
+<!-- SHOP -->
+<div id="shop" class="page">
+  <h2>🛍️ Shop (Always Open)</h2>
+  <div class="shop-item">🎩 Hat – 20 🟡</div>
+  <div class="shop-item">👕 Shirt – 30 🟡</div>
+  <div class="shop-item">✨ Cool Outfit – 50 🟡</div>
+</div>
+
+<!-- LIMITS -->
+<div id="limits" class="page">
+  <h2>❌ What I Can’t Do</h2>
+  <ul>
+    <li>I can’t do homework for you</li>
+    <li>I can’t skip steps</li>
+    <li>I can’t answer non-school questions</li>
+    <li>I only help with K–12 math</li>
+  </ul>
+</div>
+
+<script>
+let coins = 0;
+let mode = "idle";
+let step = 0;
+let a, b, op, variable = "x";
+
+function showPage(id) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function setAvatar(a) {
+  document.getElementById("avatar").textContent = a;
+}
+
+function addMessage(text, who) {
+  const chat = document.getElementById("chat");
+  const div = document.createElement("div");
+  div.className = who;
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function updateCoins(n) {
+  coins += n;
+  document.getElementById("coins").textContent = "🟡 Coins: " + coins;
+}
+
+function send() {
+  const input = document.getElementById("input");
+  const text = input.value.trim();
+  if (!text) return;
+
+  addMessage(text, "user");
+  input.value = "";
+  handle(text);
+}
+
+function handle(t) {
+  // detect variable
+  const match = t.match(/[a-zA-Z]/);
+  if (match) variable = match[0];
+
+  // simple math detect
+  if (mode === "idle" && t.match(/[\+\-\*\/]/)) {
+    const parts = t.split(/[\+\-\*\/]/);
+    a = Number(parts[0].replace(variable,"").trim()) || 1;
+    b = Number(parts[1].trim());
+    op = t.match(/[\+\-\*\/]/)[0];
+
+    mode = "teach";
+    step = 1;
+
+    addMessage(`📘 Let’s solve step by step with variable ${variable}`, "bot");
+    addMessage(`Step 1: What operation is this?`, "bot");
+    return;
+  }
+
+  if (mode === "teach" && step === 1) {
+    if (t.includes(op)) {
+      step = 2;
+      addMessage("✅ Correct!", "bot");
+      addMessage(`Step 2: Perform the operation.`, "bot");
+      return;
+    }
+    addMessage("❌ Look at the symbol.", "bot");
+    return;
+  }
+
+  if (mode === "teach" && step === 2) {
+    addMessage("🎉 Nice work!", "bot");
+    addMessage("🏆 Lesson complete!", "bot");
+    updateCoins(5);
+    mode = "idle";
+    return;
+  }
+
+  addMessage("🤔 I didn’t understand. Try a math problem.", "bot");
+}
+
+addMessage("👋 Hi! Paste a math problem to start.", "bot");
+</script>
+
+</body>
+</html>
